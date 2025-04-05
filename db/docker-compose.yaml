@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  timescaledb:
+    container_name: timescaledb
+    image: timescale/timescaledb:latest-pg14
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=sensors_data
+      - PORT=5432
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - kafka
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d sensors_data"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  timescaledb_data:
+
+networks:
+  kafka:
+    name: kafka
+    external: true

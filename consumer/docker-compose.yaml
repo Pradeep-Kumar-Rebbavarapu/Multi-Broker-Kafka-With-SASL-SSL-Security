@@ -1,0 +1,31 @@
+version: "3.5"
+
+services:
+  kafka-consumer:
+    container_name: kafka-consumer
+    build:
+      context: ./
+    restart: always
+    networks:
+      - kafka
+    volumes:
+      - ../truststore:/app/certs/truststore:ro
+      - ../pem:/app/certs/pem:ro
+    environment:
+      - BOOTSTRAP_SERVERS=kafka-0:29092,kafka-1:29093,kafka-2:29094
+      - TOPIC_NAME=iot_sensor_data
+      - GROUP_ID=iot-group
+      - CA_CERT_PATH=/app/certs/pem/ca-root.pem
+      - CLIENT_CERT_PATH=/app/certs/pem/client-certificate.pem
+      - CLIENT_KEY_PATH=/app/certs/pem/client-private-key.pem
+      - SASL_USERNAME=sa
+      - SASL_PASSWORD=000000
+    healthcheck:
+      test: "python -c 'import os; exit(0 if os.path.exists(\"/app/consumer_healthy\") else 1)'"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  kafka:
+    external: true
